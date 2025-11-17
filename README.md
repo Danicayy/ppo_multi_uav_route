@@ -134,10 +134,11 @@ python train.py
 ```
 
 **训练参数** (在 `config.py` 中修改):
-- `NUM_EPISODES`: 训练轮数 (默认: 5000)
-- `NUM_UAVS`: 无人机数量 (默认: 3)
-- `NUM_OBSTACLES`: 障碍物数量 (默认: 8)
-- `LEARNING_RATE`: 学习率 (默认: 3e-4)
+
+- `NUM_EPISODES`: 训练轮数 
+- `NUM_UAVS`: 无人机数量
+- `NUM_OBSTACLES`: 障碍物数量 
+- `LEARNING_RATE`: 学习率
 
 **训练监控**:
 ```bash
@@ -258,134 +259,5 @@ VALUE_LOSS_COEF = 0.5     # 价值损失系数
 └─────────────┘
 ```
 
-### 训练步骤
 
-1. **初始化**
-   - 创建环境和智能体
-   - 初始化网络参数
 
-2. **数据收集**
-   - 使用当前策略与环境交互
-   - 收集状态、动作、奖励等数据
-
-3. **优势计算**
-   - 使用GAE计算优势函数
-   - 计算回报（Return）
-
-4. **策略更新**
-   - 使用PPO目标函数更新Actor
-   - 最小化价值函数误差更新Critic
-   - 添加熵正则化鼓励探索
-
-5. **评估**
-   - 定期评估模型性能
-   - 保存最优模型
-
-## 实验结果
-
-### 训练曲线
-
-训练过程中，您可以观察到:
-- 平均奖励逐渐增加
-- 成功率稳步提升
-- 损失函数收敛
-
-### 性能指标
-
-典型训练结果 (5000 episodes):
-- **平均成功率**: 85%+
-- **平均步数**: 200-300
-- **平均奖励**: 150+
-
-## 扩展和定制
-
-### 1. 修改UAV数量
-
-```python
-# config.py
-NUM_UAVS = 5  # 修改为5架无人机
-```
-
-### 2. 添加动态障碍物
-
-```python
-# env/multi_uav_env.py
-def step(self, actions):
-    # 添加障碍物移动逻辑
-    self.obstacles += np.random.randn(self.num_obstacles, 2) * 0.1
-```
-
-### 3. 自定义奖励函数
-
-```python
-# env/multi_uav_env.py
-def _calculate_rewards(self):
-    # 自定义奖励逻辑
-    rewards = ...
-    return rewards
-```
-
-### 4. 3D环境扩展
-
-修改状态空间为3D坐标:
-```python
-self.uav_positions = np.zeros((self.num_uavs, 3))  # (x, y, z)
-```
-
-## 常见问题
-
-### Q1: 训练不收敛怎么办?
-
-**解决方案**:
-- 降低学习率
-- 调整奖励权重
-- 增加训练episode数
-- 减少环境复杂度（少量UAV和障碍物）
-
-### Q2: 内存不足?
-
-**解决方案**:
-- 减少 `UPDATE_INTERVAL`
-- 减小 `BATCH_SIZE`
-- 使用CPU训练
-
-### Q3: 如何加快训练?
-
-**解决方案**:
-- 使用GPU (`torch.cuda`)
-- 增大 `BATCH_SIZE`
-- 并行环境采样
-- 减少网络层数
-
-## 参考文献
-
-1. **PPO算法**:
-   - Schulman, J., et al. (2017). "Proximal Policy Optimization Algorithms"
-   - https://arxiv.org/abs/1707.06347
-
-2. **GAE**:
-   - Schulman, J., et al. (2015). "High-Dimensional Continuous Control Using Generalized Advantage Estimation"
-   - https://arxiv.org/abs/1506.02438
-
-3. **多智能体强化学习**:
-   - OpenAI. "Spinning Up in Deep RL"
-   - https://spinningup.openai.com/
-
-4. **路径规划**:
-   - LaValle, S. M. (2006). "Planning Algorithms"
-
-## 许可证
-
-MIT License
-
-## 贡献
-
-欢迎提交Issue和Pull Request!
-
-## 联系方式
-
-如有问题，请提交Issue或联系项目维护者。
-
----
-
-**祝训练顺利! 🚁**
