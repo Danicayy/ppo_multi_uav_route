@@ -11,6 +11,10 @@ from config import Config
 from model.ppo_agent import PPOAgent
 from env.multi_uav_env import MultiUAVEnv
 
+# 设置中文字体以避免警告
+plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans', 'Arial Unicode MS']
+plt.rcParams['axes.unicode_minus'] = False
+
 
 class InteractiveDemo:
     def __init__(self, model_path):
@@ -28,24 +32,24 @@ class InteractiveDemo:
         self.current_uav_index = 0
         
     def run(self):
-        """运行交互式演示"""
+        """Run interactive demonstration"""
         print("=" * 60)
-        print("多无人机路径规划交互式演示")
+        print("Multi-UAV Path Planning Interactive Demo")
         print("=" * 60)
-        print(f"环境大小: {self.config.ENV_SIZE}x{self.config.ENV_SIZE}")
-        print(f"无人机数量: {self.config.NUM_UAVS}")
-        print(f"障碍物数量: {self.config.NUM_OBSTACLES}")
+        print(f"Environment Size: {self.config.ENV_SIZE}x{self.config.ENV_SIZE}")
+        print(f"Number of UAVs: {self.config.NUM_UAVS}")
+        print(f"Number of Obstacles: {self.config.NUM_OBSTACLES}")
         print("=" * 60)
         
-        # 步骤1: 标定起点和终点
+        # Step 1: Mark start and target positions
         self._interactive_setup()
         
-        # 步骤2: 加载模型
-        print("\n正在加载训练好的模型...")
+        # Step 2: Load trained model
+        print("\nLoading trained model...")
         agents = self._load_models()
         
-        # 步骤3: 运行仿真
-        print("\n开始运行仿真...")
+        # Step 3: Run simulation
+        print("\nStarting simulation...")
         self._run_simulation(agents)
         
     def _interactive_setup(self):
@@ -55,7 +59,7 @@ class InteractiveDemo:
         ax.set_ylim(0, self.config.ENV_SIZE)
         ax.set_aspect('equal')
         ax.grid(True, alpha=0.3)
-        ax.set_title('点击标定位置 - 请标定无人机1的起点', fontsize=14)
+        ax.set_title('Click to Mark Positions - Mark Start Position for UAV 1', fontsize=14)
         
         # 绘制说明
         self._update_instructions(ax)
@@ -67,23 +71,23 @@ class InteractiveDemo:
             x, y = event.xdata, event.ydata
             
             if self.current_mode == 'start':
-                # 标定起点
+                # Mark start position
                 self.start_positions.append([x, y])
-                ax.plot(x, y, 'go', markersize=15, label=f'UAV{self.current_uav_index+1} 起点')
+                ax.plot(x, y, 'go', markersize=15, label=f'UAV{self.current_uav_index+1} Start')
                 ax.text(x, y+2, f'S{self.current_uav_index+1}', ha='center', fontsize=10, color='green', weight='bold')
                 
                 self.current_uav_index += 1
                 if self.current_uav_index >= self.config.NUM_UAVS:
                     self.current_mode = 'target'
                     self.current_uav_index = 0
-                    ax.set_title('请标定无人机1的终点', fontsize=14)
+                    ax.set_title('Mark Target Position for UAV 1', fontsize=14)
                 else:
-                    ax.set_title(f'请标定无人机{self.current_uav_index+1}的起点', fontsize=14)
+                    ax.set_title(f'Mark Start Position for UAV {self.current_uav_index+1}', fontsize=14)
                     
             elif self.current_mode == 'target':
-                # 标定终点
+                # Mark target position
                 self.target_positions.append([x, y])
-                ax.plot(x, y, 'r*', markersize=20, label=f'UAV{self.current_uav_index+1} 终点')
+                ax.plot(x, y, 'r*', markersize=20, label=f'UAV{self.current_uav_index+1} Target')
                 circle = Circle((x, y), self.config.TARGET_RADIUS, color='red', alpha=0.2)
                 ax.add_patch(circle)
                 ax.text(x, y+2, f'T{self.current_uav_index+1}', ha='center', fontsize=10, color='red', weight='bold')
@@ -92,12 +96,12 @@ class InteractiveDemo:
                 if self.current_uav_index >= self.config.NUM_UAVS:
                     self.current_mode = 'obstacle'
                     self.current_uav_index = 0
-                    ax.set_title('请标定障碍物1的位置 (剩余: 3)', fontsize=14)
+                    ax.set_title(f'Mark Obstacle 1 Position (Remaining: {self.config.NUM_OBSTACLES})', fontsize=14)
                 else:
-                    ax.set_title(f'请标定无人机{self.current_uav_index+1}的终点', fontsize=14)
+                    ax.set_title(f'Mark Target Position for UAV {self.current_uav_index+1}', fontsize=14)
                     
             elif self.current_mode == 'obstacle':
-                # 标定障碍物
+                # Mark obstacle
                 self.obstacles.append([x, y])
                 ax.plot(x, y, 'kx', markersize=15)
                 circle = Circle((x, y), self.config.OBSTACLE_RADIUS, color='black', alpha=0.3)
@@ -106,10 +110,10 @@ class InteractiveDemo:
                 
                 remaining = self.config.NUM_OBSTACLES - len(self.obstacles)
                 if remaining > 0:
-                    ax.set_title(f'请标定障碍物{len(self.obstacles)+1}的位置 (剩余: {remaining})', fontsize=14)
+                    ax.set_title(f'Mark Obstacle {len(self.obstacles)+1} Position (Remaining: {remaining})', fontsize=14)
                 else:
                     self.current_mode = 'done'
-                    ax.set_title('标定完成！关闭窗口继续...', fontsize=14, color='green')
+                    ax.set_title('Setup Complete! Close Window to Continue...', fontsize=14, color='green')
                     
             self._update_instructions(ax)
             plt.draw()
@@ -122,24 +126,24 @@ class InteractiveDemo:
         self.target_positions = np.array(self.target_positions)
         self.obstacles = np.array(self.obstacles)
         
-        print("\n标定完成！")
-        print(f"起点: {self.start_positions}")
-        print(f"终点: {self.target_positions}")
-        print(f"障碍物: {self.obstacles}")
+        print("\nSetup Complete!")
+        print(f"Start Positions: {self.start_positions}")
+        print(f"Target Positions: {self.target_positions}")
+        print(f"Obstacles: {self.obstacles}")
         
     def _update_instructions(self, ax):
-        """更新说明文字"""
+        """Update instruction text"""
         instructions = []
         if self.current_mode == 'start':
-            instructions.append(f"当前: 标定起点 ({len(self.start_positions)}/{self.config.NUM_UAVS})")
+            instructions.append(f"Current: Marking Start Positions ({len(self.start_positions)}/{self.config.NUM_UAVS})")
         elif self.current_mode == 'target':
-            instructions.append(f"当前: 标定终点 ({len(self.target_positions)}/{self.config.NUM_UAVS})")
+            instructions.append(f"Current: Marking Target Positions ({len(self.target_positions)}/{self.config.NUM_UAVS})")
         elif self.current_mode == 'obstacle':
-            instructions.append(f"当前: 标定障碍物 ({len(self.obstacles)}/{self.config.NUM_OBSTACLES})")
+            instructions.append(f"Current: Marking Obstacles ({len(self.obstacles)}/{self.config.NUM_OBSTACLES})")
         else:
-            instructions.append("标定完成！")
+            instructions.append("Setup Complete!")
             
-        # 显示在图表底部
+        # Display at bottom of chart
         ax.text(self.config.ENV_SIZE/2, -5, '\n'.join(instructions), 
                 ha='center', fontsize=11, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
@@ -148,20 +152,18 @@ class InteractiveDemo:
         agents = []
         for i in range(self.config.NUM_UAVS):
             agent = PPOAgent(
-                state_dim=self.env.observation_space.shape[0],
+                obs_dim=self.env.observation_space.shape[0],
                 action_dim=self.env.action_space.shape[0],
                 config=self.config
             )
             
             # 加载模型权重
             checkpoint = torch.load(self.model_path, map_location='cpu')
-            agent.actor.load_state_dict(checkpoint['actor'])
-            agent.critic.load_state_dict(checkpoint['critic'])
-            agent.actor.eval()
-            agent.critic.eval()
+            agent.policy.load_state_dict(checkpoint['policy'])
+            agent.policy.eval()
             
             agents.append(agent)
-            print(f"  UAV {i} 模型加载完成")
+            print(f"  UAV {i} model loaded")
             
         return agents
     
@@ -213,7 +215,7 @@ class InteractiveDemo:
             trajectory_lines.append(line)
         
         ax.legend(loc='upper right')
-        ax.set_title('路径规划仿真 - 运行中...', fontsize=14)
+        ax.set_title('Path Planning Simulation - Running...', fontsize=14)
         
         # 存储轨迹
         trajectories = [[] for _ in range(self.config.NUM_UAVS)]
@@ -250,12 +252,12 @@ class InteractiveDemo:
                         traj = np.array(trajectories[i])
                         trajectory_lines[i].set_data(traj[:, 0], traj[:, 1])
                 
-                # 检查是否所有UAV都到达目标
+                # Check if all UAVs reached target
                 all_reached = np.all(self.env.reached_target)
                 if all_reached:
-                    ax.set_title(f'仿真完成！所有UAV已到达目标 (步数: {step})', fontsize=14, color='green')
+                    ax.set_title(f'Simulation Complete! All UAVs Reached Target (Steps: {step})', fontsize=14, color='green')
                 else:
-                    ax.set_title(f'路径规划仿真 - 步数: {step}', fontsize=14)
+                    ax.set_title(f'Path Planning Simulation - Step: {step}', fontsize=14)
                 
                 plt.pause(0.01)
             
@@ -265,52 +267,129 @@ class InteractiveDemo:
                 break
         
         if all_reached:
-            print(f"\n✓ 仿真成功完成！所有UAV在 {step} 步内到达目标")
+            print(f"\n✓ Simulation completed successfully! All UAVs reached target in {step} steps")
         else:
-            print(f"\n✗ 仿真结束。部分UAV未到达目标 (最大步数: {self.config.MAX_STEPS})")
+            print(f"\n✗ Simulation ended. Some UAVs did not reach target (Max steps: {self.config.MAX_STEPS})")
         
-        print("\n统计信息:")
+        print("\nStatistics:")
         for i in range(self.config.NUM_UAVS):
             if self.env.reached_target[i]:
-                print(f"  UAV{i+1}: 已到达目标 ✓")
+                print(f"  UAV{i+1}: Reached target ✓")
             else:
                 dist = np.linalg.norm(self.env.uav_positions[i] - self.env.targets[i])
-                print(f"  UAV{i+1}: 未到达目标 (距离: {dist:.2f})")
+                print(f"  UAV{i+1}: Did not reach target (Distance: {dist:.2f})")
         
         plt.show()
 
 
 def main():
     """主函数"""
-    import sys
+    import argparse
     import os
     
-    # 检查是否提供了模型路径
-    if len(sys.argv) > 1:
-        model_path = sys.argv[1]
-    else:
-        # 使用最新的模型
-        model_dir = "models"
+    parser = argparse.ArgumentParser(
+        description='Multi-UAV Path Planning Interactive Demo - Manual Marking of Start/Target Positions and Obstacles',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  python interactive_demo.py                                      # Use latest model
+  python interactive_demo.py models/ppo_uav_0_episode_124500.pth  # Specify model
+  python interactive_demo.py --list                               # List all available models
+
+Model file location:
+  .pth files in the models/ directory
+  Format: ppo_uav_0_episode_<episode_number>.pth
+        '''
+    )
+    
+    parser.add_argument(
+        'model_path',
+        nargs='?',
+        default=None,
+        help='Path to trained model file (optional, defaults to latest model)'
+    )
+    
+    parser.add_argument(
+        '--list', '-l',
+        action='store_true',
+        help='List all available model files'
+    )
+    
+    parser.add_argument(
+        '--model-dir',
+        default='models',
+        help='Model file directory (default: models/)'
+    )
+    
+    args = parser.parse_args()
+    
+    # Helper function: extract episode number from filename
+    def extract_episode(filename):
+        try:
+            # Try to extract number from episode_XXXXX format
+            parts = filename.replace('.pth', '').split('_')
+            for i, part in enumerate(parts):
+                if part == 'episode' and i + 1 < len(parts):
+                    return int(parts[i + 1])
+            # If episode not found, try to parse last part directly
+            return int(parts[-1])
+        except (ValueError, IndexError):
+            # If unable to parse, return -1 for lowest priority
+            return -1
+    
+    # List all available models
+    if args.list:
+        model_dir = args.model_dir
         if os.path.exists(model_dir):
             models = [f for f in os.listdir(model_dir) if f.endswith('.pth')]
             if models:
-                # 按episode数排序，选择最新的
-                models.sort(key=lambda x: int(x.split('_')[-1].replace('.pth', '')), reverse=True)
-                model_path = os.path.join(model_dir, models[0])
-                print(f"使用模型: {model_path}")
+                models.sort(key=extract_episode, reverse=True)
+                print(f"\nFound {len(models)} models in {model_dir}/ directory:")
+                print("-" * 60)
+                for i, model in enumerate(models[:10], 1):  # Show first 10 only
+                    episode = extract_episode(model)
+                    size = os.path.getsize(os.path.join(model_dir, model)) / 1024
+                    ep_str = f"Episode {episode}" if episode >= 0 else "Unknown"
+                    print(f"{i:2d}. {model:45s} ({ep_str:>15s}, {size:6.1f} KB)")
+                if len(models) > 10:
+                    print(f"    ... and {len(models) - 10} more models")
+                print("-" * 60)
+                print(f"Latest model: {models[0]}")
             else:
-                print("错误: 没有找到训练好的模型")
-                print("用法: python interactive_demo.py [model_path]")
+                print(f"Error: No .pth model files found in {model_dir}/ directory")
+        else:
+            print(f"Error: Directory does not exist: {model_dir}/")
+        return
+    
+    # Determine model path
+    if args.model_path:
+        model_path = args.model_path
+    else:
+        # Use latest model
+        model_dir = args.model_dir
+        if os.path.exists(model_dir):
+            models = [f for f in os.listdir(model_dir) if f.endswith('.pth')]
+            if models:
+                # Sort by episode number, select latest
+                models.sort(key=extract_episode, reverse=True)
+                model_path = os.path.join(model_dir, models[0])
+                print(f"Using latest model: {model_path}")
+            else:
+                print(f"Error: No trained models found in {model_dir}/ directory")
+                print("\nHints:")
+                print("  1. Run train.py to train a model first")
+                print("  2. Or use --list to view available models")
                 return
         else:
-            print("错误: models目录不存在")
+            print(f"Error: Model directory does not exist: {model_dir}/")
             return
     
     if not os.path.exists(model_path):
-        print(f"错误: 模型文件不存在: {model_path}")
+        print(f"Error: Model file does not exist: {model_path}")
+        print(f"\nUse --list to view all available models")
         return
     
-    # 创建并运行演示
+    # Create and run demo
     demo = InteractiveDemo(model_path)
     demo.run()
 
