@@ -157,9 +157,9 @@ class InteractiveDemo:
                 config=self.config
             )
             
-            # 加载模型权重
-            checkpoint = torch.load(self.model_path, map_location='cpu')
-            agent.policy.load_state_dict(checkpoint['policy'])
+            # 加载模型权重 (state_dict直接保存，不在字典中)
+            state_dict = torch.load(self.model_path, map_location='cpu')
+            agent.policy.load_state_dict(state_dict)
             agent.policy.eval()
             
             agents.append(agent)
@@ -227,14 +227,14 @@ class InteractiveDemo:
         
         while not done and step < self.config.MAX_STEPS:
             # 获取每个UAV的动作
+            observations = self.env._get_obs()
             actions = []
             for i in range(self.config.NUM_UAVS):
-                obs = self.env._get_observation(i)
-                obs_tensor = torch.FloatTensor(obs).unsqueeze(0)
+                obs_tensor = torch.FloatTensor(observations[i]).unsqueeze(0)
                 
                 with torch.no_grad():
-                    action, _ = agents[i].select_action(obs_tensor)
-                actions.append(action)
+                    action, _, _ = agents[i].select_action(obs_tensor, deterministic=True)
+                actions.append(action[0])  # Remove batch dimension
             
             # 环境步进
             obs, rewards, done, truncated, info = self.env.step(actions)
